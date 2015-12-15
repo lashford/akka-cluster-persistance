@@ -18,8 +18,10 @@ class GracefulShutdownActor extends Actor {
   def receive = {
     case LeaveAndShutdownNode =>
       context.watch(region)
+      println(">>>>>>>>>>>> Leaving node")
       region ! ShardRegion.GracefulShutdown
     case Terminated(`region`) =>
+      println(">>>>>>>>>>>> Terminating node")
       cluster.registerOnMemberRemoved(context.system.terminate())
       cluster.leave(cluster.selfAddress)
   }
