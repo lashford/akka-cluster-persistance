@@ -8,7 +8,6 @@ Testing the Akka 2.4.0 feature ["akka.cluster.sharding.remember-entities"](http:
 ###Requirements:
 
 SBT : sbt.version=0.13.8
-Cassandra : The apps expects a cassandra instance running on ```localhost```.
 
 
 ###Re-creating the error
@@ -45,9 +44,9 @@ Handover is successful but we also want to shutdown the jvm once handover and cl
 
 Problems Observed:
 
-> Problem seems to be the `registerOnMemberRemoved` event is called straightaway even though Shard Region handoff has not completed
-> Cluster status of the node that was removed never gets passed `Exiting`
-> New leader node never sends `remove` message to other Node as per diagram http://doc.akka.io/docs/akka/snapshot/common/cluster.html#State_Diagram_for_the_Member_States__akka_cluster_allow-weakly-up-members=off_
-> New leader marks old node as UNREACHABLE after the heartbeat timeout which then removes it from the cluster.
++Problem seems to be the `registerOnMemberRemoved` event is called straightaway even though Shard Region handoff has not completed
++Cluster status of the node that was removed never gets passed `Exiting`
++New leader node never sends `remove` message to other Node as per diagram http://doc.akka.io/docs/akka/snapshot/common/cluster.html#State_Diagram_for_the_Member_States__akka_cluster_allow-weakly-up-members=off_
++New leader marks old node as UNREACHABLE after the heartbeat timeout which then removes it from the cluster.
 
-> have tried using graceful shutdown with even less success, this seems to cause the actor system to close before handoff complete.
++have tried using graceful shutdown with even less success, this seems to cause the actor system to close before handoff complete.
