@@ -4,6 +4,7 @@ import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{ActorLogging, Props}
 import akka.cluster.Cluster
 import akka.cluster.sharding.ShardRegion
+import akka.event.{Logging, LoggingReceive}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
 import com.gvolpe.cluster.actors.EntityActor.{Message, ProcessingState}
 import com.gvolpe.cluster.actors.MessageGenerator.Ack
@@ -38,13 +39,17 @@ private[actors] class EntityActor(id: String) extends PersistentActor with Actor
     log.info(s"PRE START $id")
   }
 
+  override def preRestart(cause: Throwable, msg: Option[Any]): Unit = {
+    log.warning(s"${getClass.getSimpleName} restarting whilst handling ${msg} - reason: ${Logging.stackTraceFor(cause)}")
+  }
+
   override def postStop(): Unit = {
     log.info(s"POST STOP $id")
   }
 
   var processingState: SortedMap[Int, Message] = SortedMap.empty
 
-  override def receiveRecover: Receive = {
+  override def receiveRecover: Receive = LoggingReceive {
     case msg: Message => updateState(msg)
     case SnapshotOffer(_, snapshot: ProcessingState) =>
       log.info(s"Snapshot Offer: ${snapshot.processing}")
@@ -55,7 +60,7 @@ private[actors] class EntityActor(id: String) extends PersistentActor with Actor
       log.info(s"Stopping actor $id")
   }
 
-  override def receiveCommand: Receive = {
+  override def receiveCommand: Receive = LoggingReceive {
     case msg: Message => persist(msg)(updateState)
     case Stop => context.stop(self)
     case _ => println("Unknown Command")

@@ -2,6 +2,7 @@ package com.gvolpe.cluster.actors
 
 import akka.actor.{Actor, Props}
 import akka.cluster.sharding.ClusterSharding
+import akka.event.LoggingReceive
 import com.gvolpe.cluster.actors.MessageGenerator.{Ack, Generate}
 import com.gvolpe.cluster.actors.EntityActor.Message
 
@@ -21,7 +22,7 @@ private[actors] class MessageGenerator extends Actor {
 
   context.system.scheduler.schedule(5 seconds, 60 seconds, self, Generate)
 
-  def receive: Receive = {
+  def receive: Receive = LoggingReceive {
     case Generate =>
       sharedRegion ! randomMessage(1)
       sharedRegion ! randomMessage(2)
