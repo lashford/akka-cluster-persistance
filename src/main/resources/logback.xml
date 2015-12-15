@@ -4,11 +4,13 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+            <pattern>%X{akkaTimestamp} | %-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
         </encoder>
     </appender>
 
     <logger name="com.datastax.driver" level="ERROR" />
+
+    <logger name="akka.cluster.ClusterHeartbeatSender" level="INFO" />
 
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />
