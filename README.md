@@ -30,6 +30,21 @@ Useful JMX Args...
 There is a built in timer on DC1Cluster that will invokke the shutdown, you can comment this out and 
 Fire up *jconsole* to connect to the leader (Dc1) on 'localhost:9998' from there you can see an mbean is exposed.
 
+###What we are trying to achieve
+A graceful removal of leader node from cluster, using Akka cluster 2.4, Akka persistence, Sharded Regios and remember entities.
+
+When a node is asked to leave the cluster it should handoff all shard regions it has to other node in the cluster, if it is the
+leader it also has to handover that responisibility to another node.  We would like the jvm to be shutdown once all handover
+has completed and would not expect the new leader to have to remove the old node via the unresponsive route.
+
+```
+ERROR akka.remote.EndpointWriter - AssociationError [akka.tcp://KlasterSystem@127.0.0.1:2552] -> [akka.tcp://KlasterSystem@127.0.0.1:2551]: Error [Shut down address: akka.tcp://KlasterSystem@127.0.0.1:2551] [
+akka.remote.ShutDownAssociation: Shut down address: akka.tcp://KlasterSystem@127.0.0.1:2551
+Caused by: akka.remote.transport.Transport$InvalidAssociationException: The remote system terminated the association because it is shutting down.
+```
+
+Are we doing something wrong, is there a way to ensure the node leaves the cluster gracefully?
+
 ###Problems Observed:
 
 ####leaveClusterAndShutdown
@@ -40,8 +55,8 @@ As part of the graceful shut down we want to shutdown the jvm once handover and 
 
 We created an actor to handle the graceful shutdown, on receipt of a msg we send `region ! ShardRegion.GracefulShutdown`
 
-We are seeing the node that requested to leave starts the handoff and the other node in the cluster becomes leader.  The problem we have is
-identifying when the handoff is complete, i would expect the new leader to send a 'remove' message to other Node as per diagram
+We are seeing the node that requested to leave starts the handoff and it appears to complete succesfully. The other node in the cluster starts to become leader and we see
+"Hand-over in progress" in the logs, although the old node is not removed gracefuly. I would expect the new leader to send a 'remove' message to other Node as per diagram
 http://doc.akka.io/docs/akka/snapshot/common/cluster.html#State_Diagram_for_the_Member_States__akka_cluster_allow-weakly-up-members=off_ but this is not happening.
 
 What happens is that the original node believes it has finished the handoff and vm exits, the new leader marks old node as UNREACHABLE after the heartbeat timeout
