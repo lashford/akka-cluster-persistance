@@ -38,7 +38,7 @@ This will cause the leader to handover the Shared Regions that it has and pass t
 
 Handover is successful but we also want to shutdown the jvm once handover and cluster removal is finished!
 
-Problems Observed:
+###Problems Observed:
 
 + Problem seems to be the *registerOnMemberRemoved* event is called straightaway even though Shard Region handoff has not completed
 + Cluster status of the node that was removed never gets passed 'Exiting'
