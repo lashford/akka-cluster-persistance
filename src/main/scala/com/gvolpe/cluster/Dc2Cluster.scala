@@ -7,6 +7,7 @@ object Dc2Cluster extends App {
 
   val cluster = new AkkaCluster("dc2", 2552)
 
+//  // Uncomment to make non leader close.
 //  import cluster.actorSystem.dispatcher
 //
 //  cluster.actorSystem.scheduler.scheduleOnce(30.seconds) {

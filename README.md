@@ -30,6 +30,11 @@ Dc2Cluster >>>
 -Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
 ```
 
+or you can run from SBT
+
+sbt "runMain com.gvolpe.cluster.Dc1Cluster"
+
+
 Once the above is configured, run both apps.
 
 Fire up ```jconsole``` connect to the leader (usually Dc1)  so ```localhost:9998```
