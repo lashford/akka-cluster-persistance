@@ -10,11 +10,6 @@ object Dc1Cluster extends App {
 
   cluster.actor(MessageGenerator.props)
 
-//  Thread.sleep(1000 * 20)
-//
-//  cluster.leaveCluster
-  cluster.awaitTermination
-
   import cluster.actorSystem.dispatcher
 
   cluster.actorSystem.scheduler.scheduleOnce(30.seconds) {
@@ -22,5 +17,7 @@ object Dc1Cluster extends App {
     val manager = new ClusterManagement(cluster.actorSystem, 2551)
     manager.leaveClusterAndShutdown()
   }
+
+  cluster.awaitTermination
 
 }

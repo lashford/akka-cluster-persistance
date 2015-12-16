@@ -25,10 +25,7 @@ class ClusterManagement(system: ActorSystem, port: Int) extends ClusterManagemen
   private val cluster:Cluster = {
     val cluster:Cluster = Cluster(system)
     cluster.registerOnMemberRemoved {
-
-
       println(s">>>>>>> ${cluster.state.members.find(_.address == cluster.selfAddress)}")
-
       // bit of hack to wait for status to change.
 //      while(true){
 //        println(s">>>>>>> ${cluster.state.members.find(_.address == cluster.selfAddress)}")
