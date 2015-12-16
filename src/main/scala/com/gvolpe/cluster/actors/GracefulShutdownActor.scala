@@ -1,6 +1,6 @@
 package com.gvolpe.cluster.actors
 
-import akka.actor.{Terminated, Props, Actor}
+import akka.actor.{ActorLogging, Terminated, Props, Actor}
 import akka.cluster.Cluster
 import akka.cluster.sharding.{ClusterSharding, ShardRegion}
 import akka.event.LoggingReceive
@@ -11,7 +11,7 @@ object GracefulShutdownActor {
   def props = Props[GracefulShutdownActor]
 }
 
-class GracefulShutdownActor extends Actor {
+class GracefulShutdownActor extends Actor with ActorLogging  {
 
   val cluster = Cluster(context.system)
   val region = ClusterSharding(context.system).shardRegion(EntityActor.shardName)
@@ -19,10 +19,10 @@ class GracefulShutdownActor extends Actor {
   def receive = LoggingReceive {
     case LeaveAndShutdownNode =>
       context.watch(region)
-      println(">>>>>>>>>>>> Leaving node")
+      log.info(">>>>>>>>>>>> Leaving node")
       region ! ShardRegion.GracefulShutdown
     case Terminated(`region`) =>
-      println(">>>>>>>>>>>> Terminating node")
+      log.info(">>>>>>>>>>>> Terminating node")
       cluster.registerOnMemberRemoved(context.system.terminate())
       cluster.leave(cluster.selfAddress)
   }

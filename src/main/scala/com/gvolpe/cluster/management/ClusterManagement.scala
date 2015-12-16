@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 class ClusterManagement(system: ActorSystem, port: Int) extends ClusterManagementMBean {
 
   override def leaveClusterAndShutdown(): Unit = {
-    println(s"INVOKING MBEAN ${system.name}")
+    system.log.info(s"INVOKING MBEAN ${system.name}")
 
     // This should perform a graceful shutdown, and once Shard regions are handed over to the other Node, this node should leave the cluster.
     val shutdownActor = system.actorOf(GracefulShutdownActor.props)
@@ -25,9 +25,8 @@ class ClusterManagement(system: ActorSystem, port: Int) extends ClusterManagemen
   private val cluster:Cluster = {
     val cluster:Cluster = Cluster(system)
     cluster.registerOnMemberRemoved {
-      println(s">>>>>>> ${cluster.state.members.find(_.address == cluster.selfAddress)}")
-      Thread.sleep(10000)
 
+      system.log.info(s">>>>>>> ${cluster.state.members.find(_.address == cluster.selfAddress)}")
       // bit of hack to wait for status to change.
 //      while(true){
 //        println(s">>>>>>> ${cluster.state.members.find(_.address == cluster.selfAddress)}")

@@ -19,29 +19,38 @@ sbt "runMain com.gvolpe.cluster.Dc1Cluster"
 
 sbt "runMain com.gvolpe.cluster.Dc1Cluster"
 
-Or use your favorite editor and run Dc1Cluster  & Dc2Cluster
+Or use your favorite IDE and run Dc1Cluster & Dc2Cluster
 
-JMX Args...
+Useful JMX Args...
 
 ```
 -Dcom.sun.management.jmxremote.port=9998 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
 ```
 
 There is a built in timer on DC1Cluster that will invokke the shutdown, you can comment this out and 
-Fire up *jconsole* to connect to the leader (usually Dc1) 'localhost:9998'
-
-From here select *mbeans* > *akka* > *cluster* > *operations*
-
-then call 'Leave("akka.tcp://KlasterSystem@127.0.0.1:2551")'
-
-This will cause the leader to handover the Shared Regions that it has and pass them to the another Node, this other node also becomes the new leader.
-
-Handover is successful but we also want to shutdown the jvm once handover and cluster removal is finished!
+Fire up *jconsole* to connect to the leader (Dc1) on 'localhost:9998' from there you can see an mbean is exposed.
 
 ###Problems Observed:
 
-+ Problem seems to be the *registerOnMemberRemoved* event is called straightaway even though Shard Region handoff has not completed
-+ Cluster status of the node that was removed never gets passed 'Exiting'
-+ New leader node never sends 'remove' message to other Node as per diagram http://doc.akka.io/docs/akka/snapshot/common/cluster.html#State_Diagram_for_the_Member_States__akka_cluster_allow-weakly-up-members=off_
-+ New leader marks old node as UNREACHABLE after the heartbeat timeout which then removes it from the cluster.
-+ I Have tried using graceful shutdown with even less success, this seems to cause the actor system to close before handoff complete.
+####leaveClusterAndShutdown
+
+This should be causing a graceful shutdown of the leader including handover of any Shared Regions on that node, to the other node in the cluster which will also become the Leader.
+
+As part of the graceful shut down we want to shutdown the jvm once handover and cluster removal is finished!
+
+We created an actor to handle the graceful shutdown, on receipt of a msg we send `region ! ShardRegion.GracefulShutdown`
+
+We are seeing the node that requested to leave starts the handoff and the other node in the cluster becomes leader.  The problem we have is
+identifying when the handoff is complete, i would expect the new leader to send a 'remove' message to other Node as per diagram
+http://doc.akka.io/docs/akka/snapshot/common/cluster.html#State_Diagram_for_the_Member_States__akka_cluster_allow-weakly-up-members=off_ but this is not happening.
+
+What happens is that the original node believes it has finished the handoff and vm exits, the new leader marks old node as UNREACHABLE after the heartbeat timeout
+which then removes it from the cluster.  This not a very graceful removal from the cluster, and whilst that timeout happens messages will be backing up.
+
+
+####cluster.leave(cluster.selfAddress)
+
+We also tried just using the cluster.leave(cluster.selfAddress), this does not appear to do the handoff of shard regions and the status of the node stays in 'Exiting',
+I added the 'registerOnMemberRemoved' callback but that seems to be called before leader handover is finished, so shutting down the vm at this point causes problems.
+The new leader correctly removes the old node from the cluster so is slightly better than above, in terms of the cluster management that is. Shard handoff is still a problem!
+
