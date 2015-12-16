@@ -4,7 +4,7 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%X{akkaTimestamp} [%thread] %-5level %logger{35} - %msg %n</pattern>
+            <pattern>%X{akkaTimestamp} | %-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
         </encoder>
     </appender>
 
