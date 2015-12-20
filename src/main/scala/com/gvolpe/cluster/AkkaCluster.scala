@@ -51,11 +51,4 @@ class AkkaCluster(persistentId: String, port: Int) {
 
   def awaitTermination = Await.result(actorSystem.whenTerminated, 1000 seconds)
 
-  def leaveCluster = {
-    val address = Address("akka.tcp", persistentId, "127.0.0.1", port)
-    val cluster = Cluster(actorSystem)
-    cluster.leave(address)
-    cluster.down(address)
-  }
-
 }

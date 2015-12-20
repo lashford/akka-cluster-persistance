@@ -17,7 +17,7 @@ You can run from SBT
 
 sbt "runMain com.gvolpe.cluster.Dc1Cluster"
 
-sbt "runMain com.gvolpe.cluster.Dc1Cluster"
+sbt "runMain com.gvolpe.cluster.Dc2Cluster"
 
 Or use your favorite IDE and run Dc1Cluster & Dc2Cluster
 
